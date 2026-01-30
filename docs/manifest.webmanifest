@@ -1,0 +1,12 @@
+{
+  "name": "今年進度條 · Year Progress",
+  "short_name": "Year Progress",
+  "description": "顯示今年第幾天與年度進度百分比（深色模式、原生分享）。",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F6F7FB",
+  "theme_color": "#F5F6FA",
+  "icons": [
+    {"src": "./icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any"}
+  ]
+}
