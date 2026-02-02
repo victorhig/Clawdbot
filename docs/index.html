@@ -5,25 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
 
-    <title>今年進度條 · Year Progress</title>
-    <meta name="description" content="今年已經過了多少？用清淡、現代化的進度條顯示今年第幾天與百分比，支援深色模式與原生分享。" />
+    <title>今年進度條</title>
+    <meta name="description" content="顯示今年、本月或本週的進度；也可設定倒數目標日期。" />
 
     <!-- Canonical / SEO -->
     <link rel="canonical" href="https://victorhig.github.io/Clawdbot/" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Year Progress" />
-    <meta property="og:title" content="今年進度條 · Year Progress" />
-    <meta property="og:description" content="顯示今年已是第幾天、已經過了多少百分比。清淡配色、深色模式、原生分享。" />
+    <meta property="og:site_name" content="今年進度條" />
+    <meta property="og:title" content="今年進度條" />
+    <meta property="og:description" content="顯示今年、本月或本週的進度；也可設定倒數目標日期。" />
     <meta property="og:url" content="https://victorhig.github.io/Clawdbot/" />
     <meta property="og:image" content="https://victorhig.github.io/Clawdbot/og.svg" />
-    <meta property="og:image:alt" content="Year Progress — a calm progress bar showing year completion" />
+    <meta property="og:image:alt" content="今年進度條 — 顯示年度進度的簡潔進度條" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="今年進度條 · Year Progress" />
-    <meta name="twitter:description" content="顯示今年第幾天與年度進度百分比。" />
+    <meta name="twitter:title" content="今年進度條" />
+    <meta name="twitter:description" content="顯示今年、本月或本週的進度；也可設定倒數目標日期。" />
     <meta name="twitter:image" content="https://victorhig.github.io/Clawdbot/og.svg" />
 
     <!-- PWA-ish -->
@@ -242,6 +242,53 @@
         justify-content:flex-end;
       }
 
+      .modes{
+        display:flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .seg{
+        appearance:none;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,.06);
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        cursor:pointer;
+        transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+        display:inline-flex;
+        gap: 8px;
+        align-items:center;
+        user-select:none;
+      }
+
+      .seg:hover{ background: var(--btnHover); transform: translateY(-1px); }
+      .seg:active{ transform: translateY(0px); }
+      .seg[aria-selected="true"]{
+        background: rgba(143,211,244,.22);
+        border-color: rgba(143,211,244,.35);
+      }
+
+      input[type="date"]{
+        appearance:none;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,.06);
+        color: var(--text);
+        padding: 9px 10px;
+        border-radius: 12px;
+        font-size: 13px;
+      }
+
+      .row{
+        display:flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items:center;
+      }
+
       button{
         appearance:none;
         border: 1px solid var(--border);
@@ -256,6 +303,12 @@
         gap: 8px;
         align-items:center;
       }
+
+      body.widget header,
+      body.widget footer,
+      body.widget .side{ display:none; }
+      body.widget .wrap{ width:min(760px, 100%); }
+      body.widget{ padding: 18px 14px; }
 
       button:hover{ background: var(--btnHover); transform: translateY(-1px); }
       button:active{ transform: translateY(0px); }
@@ -287,13 +340,19 @@
       <header>
         <div class="title">
           <h1>今年進度條</h1>
-          <p class="sub">淡色系、現代化設計 · 支援深色模式與原生分享</p>
+          <p class="sub">年度進度</p>
+          <div class="modes" role="tablist" aria-label="模式">
+            <button class="seg" type="button" data-view="year" aria-selected="true">年</button>
+            <button class="seg" type="button" data-view="month" aria-selected="false">月</button>
+            <button class="seg" type="button" data-view="week" aria-selected="false">週</button>
+            <button class="seg" type="button" data-view="to" aria-selected="false">倒數</button>
+          </div>
         </div>
-        <div class="btns" aria-label="Actions">
-          <button id="shareBtn" type="button" title="Share">
+        <div class="btns" aria-label="操作">
+          <button id="shareBtn" type="button" title="分享">
             <span aria-hidden="true">↗</span><span>分享</span>
           </button>
-          <button id="copyBtn" type="button" title="Copy link">
+          <button id="copyBtn" type="button" title="複製連結">
             <span aria-hidden="true">⧉</span><span>複製連結</span>
           </button>
         </div>
@@ -305,13 +364,13 @@
             <div class="statRow">
               <div>
                 <div class="percent"><span id="pct">--.-</span>%</div>
-                <div class="label">年度已完成</div>
+                <div class="label" id="modeLabel">年度已完成</div>
               </div>
               <div style="text-align:right">
                 <div class="percent" style="font-size: clamp(18px, 3.4vw, 28px); line-height:1.1">
-                  第 <span id="day">--</span> 天
+                  <span id="rightPrefix">第</span> <span id="day">--</span> <span id="rightSuffix">天</span>
                 </div>
-                <div class="label">今年一共 <span id="days">--</span> 天</div>
+                <div class="label"><span id="totalLabel">今年一共</span> <span id="days">--</span> 天</div>
               </div>
             </div>
 
@@ -326,18 +385,26 @@
               </div>
               <div class="pill">
                 <div class="v"><span id="left">--</span></div>
-                <div class="k">今年剩餘天數</div>
+                <div class="k" id="leftLabel">今年剩餘天數</div>
               </div>
             </div>
           </div>
 
           <aside class="side">
-            <div class="pill" style="height:100%">
-              <div class="v" style="font-size:14px">小提示</div>
+            <div class="pill" id="toPill" style="display:none">
+              <div class="v" style="font-size:14px">倒數</div>
               <div class="k" style="font-size:13px; margin-top:10px; line-height:1.6">
-                這頁會用你裝置的本地時間計算「今年第幾天」。
-                你也可以把它加到主畫面當作小工具頁面使用。
-                <div style="margin-top:10px" class="mono" id="now"></div>
+                <div class="row" style="margin-bottom:8px">
+                  <input id="toDate" type="date" />
+                  <button id="toEndYearBtn" type="button" title="設為年底">年底</button>
+                </div>
+              </div>
+            </div>
+            <div class="pill" style="height:100%">
+              <div class="v" style="font-size:14px">資訊</div>
+              <div class="k" style="font-size:13px; margin-top:10px; line-height:1.6">
+                <div class="mono" id="now"></div>
+                <div style="margin-top:10px" id="milestone" class="k" aria-live="polite"></div>
               </div>
             </div>
             <div class="toast" id="toast" aria-live="polite"></div>
@@ -346,8 +413,8 @@
       </section>
 
       <footer>
-        <div>Made for <span class="mono">victorhig/Clawdbot</span></div>
-        <div><a href="https://github.com/victorhig/Clawdbot" target="_blank" rel="noreferrer">GitHub</a></div>
+        <div><span class="mono">victorhig/Clawdbot</span></div>
+        <div><a href="https://github.com/victorhig/Clawdbot" target="_blank" rel="noreferrer">程式碼</a></div>
       </footer>
     </div>
 
@@ -373,23 +440,106 @@
         return Math.floor(diff / oneDay) + 1; // 1-based
       }
 
+      const qp = new URLSearchParams(location.search);
+      const getViewFromURL = () => (qp.get('view') || 'year').toLowerCase();
+      const getWidgetFromURL = () => (qp.get('mode') || '').toLowerCase() === 'widget';
+
+      function startOfDay(d){
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      }
+
+      function daysBetween(a, b){
+        const oneDay = 24 * 60 * 60 * 1000;
+        return Math.round((startOfDay(b) - startOfDay(a)) / oneDay);
+      }
+
+      function startOfISOWeek(d){
+        const x = startOfDay(d);
+        const day = x.getDay(); // 0=Sun..6=Sat
+        const diff = (day === 0 ? -6 : 1 - day); // to Monday
+        x.setDate(x.getDate() + diff);
+        return x;
+      }
+
+      function clamp(n, a, b){
+        return Math.max(a, Math.min(b, n));
+      }
+
+      function fmtDate(d){
+        return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+      }
+
+      function setSelectedView(view){
+        document.querySelectorAll('.seg[data-view]').forEach((b) => {
+          b.setAttribute('aria-selected', b.dataset.view === view ? 'true' : 'false');
+        });
+        $('toPill').style.display = (view === 'to') ? '' : 'none';
+      }
+
       function update(){
         const now = new Date();
         const y = now.getFullYear();
-        const total = isLeapYear(y) ? 366 : 365;
-        const doy = dayOfYear(now);
-        const pct = (doy / total) * 100;
-
-        $('pct').textContent = pct.toFixed(1);
-        $('day').textContent = String(doy);
-        $('days').textContent = String(total);
-        $('left').textContent = String(total - doy);
 
         const yyyy = y;
         const mm = pad2(now.getMonth() + 1);
         const dd = pad2(now.getDate());
         $('date').textContent = `${yyyy}-${mm}-${dd}`;
-        $('now').textContent = `Local time: ${yyyy}-${mm}-${dd} ${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+        $('now').textContent = `本機時間：${yyyy}-${mm}-${dd} ${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+
+        const view = window.__view || getViewFromURL();
+        setSelectedView(view);
+
+        let start, end, label, rightPrefix = '第', rightSuffix = '天', totalLabel = '今年一共', leftLabel = '今年剩餘天數';
+        if (view === 'month'){
+          start = new Date(y, now.getMonth(), 1);
+          end = new Date(y, now.getMonth() + 1, 1);
+          label = '本月已完成';
+          rightSuffix = '天';
+          totalLabel = '本月一共';
+          leftLabel = '本月剩餘天數';
+        } else if (view === 'week'){
+          start = startOfISOWeek(now);
+          end = new Date(start);
+          end.setDate(end.getDate() + 7);
+          label = '本週已完成';
+          rightSuffix = '天';
+          totalLabel = '本週一共';
+          leftLabel = '本週剩餘天數';
+        } else if (view === 'to'){
+          const raw = qp.get('to') || localStorage.getItem('toDate') || '';
+          const parsed = raw ? new Date(raw + 'T00:00:00') : null;
+          const target = (parsed && !Number.isNaN(parsed.getTime())) ? parsed : new Date(y, 11, 31);
+          const input = $('toDate');
+          if (input) input.value = fmtDate(target);
+          start = new Date(y, 0, 1);
+          end = new Date(target);
+          end.setDate(end.getDate() + 1); // inclusive
+          label = '目標前已完成';
+          rightPrefix = '距離';
+          rightSuffix = '天';
+          totalLabel = '目標總共';
+          leftLabel = '距離目標';
+        } else {
+          start = new Date(y, 0, 1);
+          end = new Date(y + 1, 0, 1);
+          label = '年度已完成';
+        }
+
+        const totalDays = clamp(daysBetween(start, end), 1, 999999);
+        const elapsedDays = clamp(daysBetween(start, now) + 1, 1, totalDays);
+        const leftDays = clamp(totalDays - elapsedDays, 0, 999999);
+        const pct = (elapsedDays / totalDays) * 100;
+
+        $('modeLabel').textContent = label;
+        $('rightPrefix').textContent = rightPrefix;
+        $('rightSuffix').textContent = rightSuffix;
+        $('totalLabel').textContent = totalLabel;
+        $('leftLabel').textContent = leftLabel;
+
+        $('pct').textContent = pct.toFixed(1);
+        $('day').textContent = String(elapsedDays);
+        $('days').textContent = String(totalDays);
+        $('left').textContent = String(leftDays);
 
         // set progress bar
         const fill = $('fill');
@@ -397,12 +547,27 @@
           fill.style.width = `${pct.toFixed(3)}%`;
           const pb = document.querySelector('[role="progressbar"]');
           pb.setAttribute('aria-valuenow', pct.toFixed(1));
+          pb.setAttribute('aria-label', label);
         });
 
+        // milestone hint
+        const ms = [25, 50, 75, 90];
+        const next = ms.find((m) => pct < m);
+        const milestoneEl = $('milestone');
+        if (milestoneEl){
+          if (next){
+            const needDays = Math.max(0, Math.ceil((next/100)*totalDays) - elapsedDays);
+            milestoneEl.textContent = `下一個里程碑：${next}%（約還差 ${needDays} 天）`;
+          } else {
+            milestoneEl.textContent = '今年快結束了，撐住。';
+          }
+        }
+
         // update dynamic share text
+        const viewName = (view === 'year') ? '今年' : (view === 'month') ? '本月' : (view === 'week') ? '本週' : '目標';
         window.__share = {
-          title: '今年進度條 · Year Progress',
-          text: `今年已經第 ${doy} 天（${pct.toFixed(1)}%）`,
+          title: '今年進度條',
+          text: `${viewName}進度：第 ${elapsedDays}/${totalDays} 天（${pct.toFixed(1)}%）`,
           url: location.href
         };
       }
@@ -437,14 +602,69 @@
         }
       }
 
+      function setView(view, opts = { pushURL: true }){
+        window.__view = view;
+        setSelectedView(view);
+        if (opts.pushURL){
+          const p = new URLSearchParams(location.search);
+          p.set('view', view);
+          const url = `${location.pathname}?${p.toString()}`;
+          history.replaceState(null, '', url);
+          // keep qp in sync
+          qp.delete('view');
+          p.forEach((v, k) => qp.set(k, v));
+        }
+        update();
+      }
+
+      document.querySelectorAll('.seg[data-view]').forEach((b) => {
+        b.addEventListener('click', () => setView(b.dataset.view));
+      });
+
+      const toDate = $('toDate');
+      if (toDate){
+        toDate.addEventListener('change', () => {
+          if (toDate.value) localStorage.setItem('toDate', toDate.value);
+          const p = new URLSearchParams(location.search);
+          p.set('to', toDate.value);
+          p.set('view', 'to');
+          history.replaceState(null, '', `${location.pathname}?${p.toString()}`);
+          qp.delete('to');
+          qp.delete('view');
+          p.forEach((v, k) => qp.set(k, v));
+          setView('to', { pushURL: false });
+        });
+      }
+
+      const endBtn = $('toEndYearBtn');
+      if (endBtn){
+        endBtn.addEventListener('click', () => {
+          const now = new Date();
+          const end = new Date(now.getFullYear(), 11, 31);
+          const v = fmtDate(end);
+          if (toDate) toDate.value = v;
+          localStorage.setItem('toDate', v);
+          const p = new URLSearchParams(location.search);
+          p.set('to', v);
+          p.set('view', 'to');
+          history.replaceState(null, '', `${location.pathname}?${p.toString()}`);
+          qp.delete('to');
+          qp.delete('view');
+          p.forEach((vv, k) => qp.set(k, vv));
+          setView('to', { pushURL: false });
+          toast('已設定為年底');
+        });
+      }
+
       $('copyBtn').addEventListener('click', copyLink);
       $('shareBtn').addEventListener('click', share);
 
-      update();
-      // refresh small clock; keep progress stable for the day
+      if (getWidgetFromURL()) document.body.classList.add('widget');
+
+      setView(getViewFromURL(), { pushURL: false });
+      // refresh small clock
       setInterval(() => {
-        const n = new Date();
-        $('now').textContent = `Local time: ${n.getFullYear()}-${pad2(n.getMonth()+1)}-${pad2(n.getDate())} ${pad2(n.getHours())}:${pad2(n.getMinutes())}:${pad2(n.getSeconds())}`;
+        update();
       }, 1000);
     </script>
   </body>
